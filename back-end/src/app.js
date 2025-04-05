@@ -21,6 +21,9 @@ app.use(cookieParser())
 
 /*********** ROTAS DA API **************/
 
+
+
+
 import carsRouter from './routes/cars.js'
 app.use('/cars', carsRouter)
 
