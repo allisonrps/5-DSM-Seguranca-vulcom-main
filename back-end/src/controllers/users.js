@@ -1,11 +1,15 @@
 import prisma from '../database/client.js'
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 
 const controller = {}     // Objeto vazio
 
 controller.create = async function(req, res) {
   try {
-
+    // verifica se existe o campo password e o criptografa antes de criar o novo usuário
+    if (req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 12)
+      }
     await prisma.user.create({ data: req.body })
 
     // HTTP 201: Created
@@ -21,7 +25,11 @@ controller.create = async function(req, res) {
 
 controller.retrieveAll = async function(req, res) {
   try {
-    const result = await prisma.user.findMany()
+    const result = await prisma.user.findMany(
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      { omit: {password: true}}
+    )
 
     // HTTP 200: OK (implícito)
     res.send(result)
@@ -37,7 +45,10 @@ controller.retrieveAll = async function(req, res) {
 controller.retrieveOne = async function(req, res) {
   try {
     const result = await prisma.user.findUnique({
-      where: { id: Number(req.params.id) }
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+       omit: {password: true},
+       where: { id: Number(req.params.id) }
     })
 
     // Encontrou ~> retorna HTTP 200: OK (implícito)
@@ -55,6 +66,11 @@ controller.retrieveOne = async function(req, res) {
 
 controller.update = async function(req, res) {
   try {
+
+// verifica se existe o campo password e o criptografa antes de criar o novo usuário
+   if (req.body.password) {
+   req.body.password = await bcrypt.hash(req.body.password, 12)
+   }
 
     const result = await prisma.user.update({
       where: { id: Number(req.params.id) },
@@ -118,8 +134,26 @@ controller.login = async function(req, res) {
 
       // Usuário encontrado, vamos conferir a senha
       let passwordIsValid
-      if(req.body?.username === 'admin' && req.body?.password === 'admin123') passwordIsValid = true
-      else passwordIsValid = user.password === req.body?.password
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      //REMOVENDO VULNERABILIDADE EM AUTENTIFICAÇÃO FIXA
+      // if(req.body?.username === 'admin' && req.body?.password === 'admin123') passwordIsValid = true
+      // else passwordIsValid = user.password === req.body?.password
+
+      // passwordIsValid = user.password === req.body?.password
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      // CHAMANDO BCRYPT PARA COMPARAR SE HASH DA SENHA ENVIADA É IGUAL O HASH DO BANCO DE DADOS
+      passwordIsValid = await bcrypt.compare(req.body?.password, user.password)
+
+
+
+
+
+
 
       // Se a senha estiver errada, retorna
       // HTTP 401: Unauthorized

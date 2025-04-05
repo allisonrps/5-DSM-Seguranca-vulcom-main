@@ -7,6 +7,13 @@ import logger from 'morgan'
 
 const app = express()
 
+import cors from 'cors'
+
+// configurando cors para que o backend aceite requisições vindas das origens indicadas pela variavel de ambiente ALLOW_ORIGINS
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS.split(",")
+}))
+
 app.use(logger('dev'))
 app.use(json())
 app.use(urlencoded({ extended: false }))
