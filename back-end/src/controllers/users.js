@@ -6,10 +6,13 @@ const controller = {}     // Objeto vazio
 
 controller.create = async function(req, res) {
   try {
-    // verifica se existe o campo password e o criptografa antes de criar o novo usuário
-    if (req.body.password) {
+
+    // Verifica se existe o campo "password" e o
+    // criptografa antes de criar o novo usuário
+    if(req.body.password) {
       req.body.password = await bcrypt.hash(req.body.password, 12)
-      }
+    }
+
     await prisma.user.create({ data: req.body })
 
     // HTTP 201: Created
@@ -26,9 +29,9 @@ controller.create = async function(req, res) {
 controller.retrieveAll = async function(req, res) {
   try {
     const result = await prisma.user.findMany(
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      { omit: {password: true}}
+      // Omite o campo "password" do resultado
+      // por questão de segurança
+      { omit: { password: true } }  
     )
 
     // HTTP 200: OK (implícito)
@@ -45,10 +48,10 @@ controller.retrieveAll = async function(req, res) {
 controller.retrieveOne = async function(req, res) {
   try {
     const result = await prisma.user.findUnique({
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-       omit: {password: true},
-       where: { id: Number(req.params.id) }
+      // Omite o campo "password" do resultado
+      // por questão de segurança
+      omit: { password: true },
+      where: { id: Number(req.params.id) }
     })
 
     // Encontrou ~> retorna HTTP 200: OK (implícito)
@@ -67,10 +70,11 @@ controller.retrieveOne = async function(req, res) {
 controller.update = async function(req, res) {
   try {
 
-// verifica se existe o campo password e o criptografa antes de criar o novo usuário
-   if (req.body.password) {
-   req.body.password = await bcrypt.hash(req.body.password, 12)
-   }
+    // Verifica se existe o campo "password" e o
+    // criptografa antes de criar o novo usuário
+    if(req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 12)
+    }
 
     const result = await prisma.user.update({
       where: { id: Number(req.params.id) },
@@ -134,34 +138,23 @@ controller.login = async function(req, res) {
 
       // Usuário encontrado, vamos conferir a senha
       let passwordIsValid
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      //REMOVENDO VULNERABILIDADE EM AUTENTIFICAÇÃO FIXA
+      
+      // REMOVENDO VULNERABILIDADE DE AUTENTICAÇÃO FIXA
       // if(req.body?.username === 'admin' && req.body?.password === 'admin123') passwordIsValid = true
       // else passwordIsValid = user.password === req.body?.password
-
       // passwordIsValid = user.password === req.body?.password
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++     
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      // CHAMANDO BCRYPT PARA COMPARAR SE HASH DA SENHA ENVIADA É IGUAL O HASH DO BANCO DE DADOS
+      
+      // Chamando bcrypt.compare() para verificar se o hash da senha
+      // enviada coincide com o hash da senha armazenada no BD
       passwordIsValid = await bcrypt.compare(req.body?.password, user.password)
-
-
-
-
-
-
 
       // Se a senha estiver errada, retorna
       // HTTP 401: Unauthorized
       if(! passwordIsValid) return res.status(401).end()
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      // remove o campo password do objeto  username de usalo no token no resposta da requisição
-        delete user.password
 
+      // Remove o campo "password" do objeto "user" antes
+      // de usá-lo no token e na resposta da requisição
+      delete user.password
 
       // Usuário e senha OK, passamos ao procedimento de gerar o token
       const token = jwt.sign(
@@ -172,7 +165,7 @@ controller.login = async function(req, res) {
 
       // Formamos o cookie para enviar ao front-end
       res.cookie(process.env.AUTH_COOKIE_NAME, token, {
-        httpOnly: true, // O cookie ficará inacessível para o JS no front-end
+        //httpOnly: true, // O cookie ficará inacessível para o JS no front-end
         secure: true,   // O cookie será criptografado em conexões https
         sameSite: 'None',
         path: '/',
