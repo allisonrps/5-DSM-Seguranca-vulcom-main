@@ -21,17 +21,17 @@ export default function Homepage() {
         Sistema para análise e estudo de vulnerabilidades comuns  
       </Typography>
 
-      <h3>Valores armazenados no localStorage:</h3>
+      <h3>Valores armazenados no localStorage:</h3>3
       <pre>
-      {
-        array.map((val, idx) => (
-          <p key={idx}>{val}</p>
-        ))
-      }
+        {
+          array.map((val, idx) => (
+            <p key={idx}>{val}</p>
+          ))
+        }
       </pre>
 
-      <h3>Cookies Encontrado</h3>
-        <pre>document.cookies</pre>
+      <h3>Cookies encontrados:</h3>
+      <pre>{document.cookie}</pre>
 
     </>
   )

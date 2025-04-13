@@ -7,6 +7,10 @@ const controller = {}     // Objeto vazio
 controller.create = async function(req, res) {
   try {
 
+    // Somente usuários administradores podem acessar este recurso
+    // HTTP 403: Forbidden(
+    if(! req?.authUser?.is_admin) return res.status(403).end()
+
     // Verifica se existe o campo "password" e o
     // criptografa antes de criar o novo usuário
     if(req.body.password) {
@@ -28,6 +32,11 @@ controller.create = async function(req, res) {
 
 controller.retrieveAll = async function(req, res) {
   try {
+
+    // Somente usuários administradores podem acessar este recurso
+    // HTTP 403: Forbidden
+    if(! req?.authUser?.is_admin) return res.status(403).end()
+
     const result = await prisma.user.findMany(
       // Omite o campo "password" do resultado
       // por questão de segurança
@@ -47,6 +56,14 @@ controller.retrieveAll = async function(req, res) {
 
 controller.retrieveOne = async function(req, res) {
   try {
+
+    // Somente usuários administradores ou o próprio usuário
+    // autenticado podem acessar este recurso
+    // HTTP 403: Forbidden
+    if(! (req?.authUser?.is_admin || 
+      Number(req?.authUser?.id) === Number(req.params.id))) 
+      return res.status(403).end()
+
     const result = await prisma.user.findUnique({
       // Omite o campo "password" do resultado
       // por questão de segurança
@@ -69,6 +86,10 @@ controller.retrieveOne = async function(req, res) {
 
 controller.update = async function(req, res) {
   try {
+
+    // Somente usuários administradores podem acessar este recurso
+    // HTTP 403: Forbidden
+    if(! req?.authUser?.is_admin) return res.status(403).end()
 
     // Verifica se existe o campo "password" e o
     // criptografa antes de criar o novo usuário
@@ -96,6 +117,11 @@ controller.update = async function(req, res) {
 
 controller.delete = async function(req, res) {
   try {
+
+    // Somente usuários administradores podem acessar este recurso
+    // HTTP 403: Forbidden
+    if(! req?.authUser?.is_admin) return res.status(403).end()
+
     await prisma.user.delete({
       where: { id: Number(req.params.id) }
     })
@@ -165,7 +191,7 @@ controller.login = async function(req, res) {
 
       // Formamos o cookie para enviar ao front-end
       res.cookie(process.env.AUTH_COOKIE_NAME, token, {
-        //httpOnly: true, // O cookie ficará inacessível para o JS no front-end
+        httpOnly: true, // O cookie ficará inacessível para o JS no front-end
         secure: true,   // O cookie será criptografado em conexões https
         sameSite: 'None',
         path: '/',
@@ -174,7 +200,7 @@ controller.login = async function(req, res) {
 
       // Retorna o token e o usuário autenticado com
       // HTTP 200: OK (implícito)
-      res.send({token, user})
+      res.send({user})
 
   }
   catch(error) {
@@ -183,6 +209,13 @@ controller.login = async function(req, res) {
     // HTTP 500: Internal Server Error
     res.status(500).end()
   }
+}
+
+controller.logout = function(req, res) {
+  // Apaga no front-end o cookie que armazena o token
+  res.clearCookie(process.env.AUTH_COOKIE_NAME)
+  // HTTP 204: No Content
+  res.status(204).end()
 }
 
 controller.me = function(req, res) {
