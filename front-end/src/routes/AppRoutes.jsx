@@ -23,6 +23,6 @@ export default function AppRoutes() {
           element={element}
         />
       })
-    }    
-  </Routes>
+    }    
+  </Routes>
 }
