@@ -1,5 +1,5 @@
 import prisma from '../database/client.js'
-import Cars from '../models/Cars.js'
+import Cars from '../models/Car.js'
 import { ZodError } from 'zod'
 
 const controller = {}     // Objeto vazio
