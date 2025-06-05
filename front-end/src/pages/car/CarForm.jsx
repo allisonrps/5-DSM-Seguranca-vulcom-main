@@ -295,8 +295,8 @@ export default function CarForm() {
           </div>
 
           <InputMask
+            mask='AAA-9$99'
 
-            formatChars={plateMaskFormatChars}
 
             value={car.plates}
             onChange={handleFieldChange}
